@@ -4,14 +4,15 @@ from dotenv import dotenv_values
 import pandas as pd
 
 env_vars = dotenv_values(".env")
-REQUEST_URL = env_vars.get("REQUEST_URL")
-BEARER_TOKEN = env_vars.get("BEARER_TOKEN")
-CONNECTION_STRING = env_vars.get("CONNECTION_STRING")
+REQUEST_URL: str = env_vars.get("REQUEST_URL")
+BEARER_TOKEN: str = env_vars.get("BEARER_TOKEN")
+CONNECTION_STRING: str = env_vars.get("CONNECTION_STRING")
 
 HEADERS = {
     "Authorization": BEARER_TOKEN,
     "Neon-Connection-String": CONNECTION_STRING,
-    "Content-Type": "application/json"
+    "Content-Type": "application/json",
+    "Accept": "application/json",
 }
 
 def execute_query(query, params=[]):
@@ -21,8 +22,16 @@ def execute_query(query, params=[]):
         "query": query, 
         "params": params
     }
+    
     response = requests.post(REQUEST_URL, headers=HEADERS, json=payload)
-    response.raise_for_status()
+    try:
+        response.raise_for_status()
+    except requests.HTTPError as exc:
+        try:
+            detail = response.json()
+        except Exception:
+            detail = response.text
+        raise RuntimeError(f"Query failed with {response.status_code}: {detail}") from exc
     return response.json()
 
 
@@ -68,5 +77,5 @@ def output(data):
     with open("output.json", "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
-# output(get_chats_with_messages())
+output(get_chats_with_messages())
 # print(to_dataframe(get_chats_with_messages()))

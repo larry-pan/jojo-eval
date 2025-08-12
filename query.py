@@ -1,39 +1,17 @@
-import requests
 import json
 from dotenv import dotenv_values
+from sqlalchemy import create_engine, text
 import pandas as pd
 
 env_vars = dotenv_values(".env")
-REQUEST_URL: str = env_vars.get("REQUEST_URL")
-BEARER_TOKEN: str = env_vars.get("BEARER_TOKEN")
-CONNECTION_STRING: str = env_vars.get("CONNECTION_STRING")
+CONNECTION_STRING = env_vars.get("CONNECTION_STRING")
 
-HEADERS = {
-    "Authorization": BEARER_TOKEN,
-    "Neon-Connection-String": CONNECTION_STRING,
-    "Content-Type": "application/json",
-    "Accept": "application/json",
-}
+engine = create_engine(CONNECTION_STRING)
 
-def execute_query(query, params=[]):
-    """Execute SQL query on Neon PostgreSQL database"""
-
-    payload = {
-        "query": query, 
-        "params": params
-    }
-    
-    response = requests.post(REQUEST_URL, headers=HEADERS, json=payload)
-    try:
-        response.raise_for_status()
-    except requests.HTTPError as exc:
-        try:
-            detail = response.json()
-        except Exception:
-            detail = response.text
-        raise RuntimeError(f"Query failed with {response.status_code}: {detail}") from exc
-    return response.json()
-
+def execute_query(query):
+    """execute sqlalchemy query on neon postgresql db and return df"""
+    df = pd.read_sql_query(text(query), engine)
+    return df
 
 def get_chat_tables():
     """Find all chat-related tables"""
@@ -56,26 +34,36 @@ def get_ai_chat_structure():
     """
     return execute_query(query)
 
-def get_chats_with_messages(limit=10):
+def get_chats_with_messages(limit=5):
     """Get ai_chats that have actual messages"""
 
     query = f"""
-    SELECT * FROM ai_chat 
-    WHERE json_array_length(messages::json) > 0 
+    SELECT *
+    FROM ai_chat
+    WHERE messages IS NOT NULL 
+    AND jsonb_array_length(messages) > 0
     LIMIT {limit};
     """
     return execute_query(query)
 
 def to_dataframe(results):
-    """Convert query json results to DataFrame"""
+    """Convert json to df"""
 
     columns = [field['name'] for field in results['fields']]
     df = pd.DataFrame(results['rows'], columns=columns)
     return df
 
-def output(data):
-    with open("output.json", "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+def to_json(df):
+    """Convert df to json"""
 
-output(get_chats_with_messages())
-# print(to_dataframe(get_chats_with_messages()))
+    records = df.to_dict('records')
+    return json.dumps(records, indent=2, ensure_ascii=False, default=str)
+
+def save_json(df, filename="output.json"):
+    """Save df as json file"""
+    records = df.to_dict('records') 
+    with open(filename, 'w', encoding='utf-8') as f:
+        json.dump(records, f, indent=2, ensure_ascii=False, default=str)
+    print(f"Data saved to {filename}")
+
+save_json(get_chats_with_messages())

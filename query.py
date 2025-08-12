@@ -27,21 +27,21 @@ def get_ai_chat_structure():
     """Get structure of ai_chat table"""
 
     query = """
-    SELECT column_name, data_type, is_nullable 
+    SELECT column_name, data_type, is_nullable
     FROM information_schema.columns 
     WHERE table_name = 'ai_chat' 
     ORDER BY ordinal_position;
     """
     return execute_query(query)
 
-def get_chats_with_messages(limit=5):
+def get_chats(limit=10, include_empty_chats=True):
     """Get ai_chats that have actual messages"""
 
     query = f"""
     SELECT *
     FROM ai_chat
-    WHERE messages IS NOT NULL 
-    AND jsonb_array_length(messages) > 0
+    {"" if include_empty_chats else "WHERE messages IS NOT NULL AND jsonb_array_length(messages) > 0"}
+    ORDER BY RANDOM()
     LIMIT {limit};
     """
     return execute_query(query)
@@ -65,5 +65,3 @@ def save_json(df, filename="output.json"):
     with open(filename, 'w', encoding='utf-8') as f:
         json.dump(records, f, indent=2, ensure_ascii=False, default=str)
     print(f"Data saved to {filename}")
-
-# save_json(get_ai_chat_structure(), "ai_chat_structure.json")

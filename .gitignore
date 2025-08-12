@@ -6,7 +6,7 @@ __pycache__/
 
 venv/
 .vscode/
+reference_stuff/
 pyrightconfig.json
 .env
-output.json
-stuff.txt
+*.json

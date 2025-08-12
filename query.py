@@ -66,4 +66,4 @@ def save_json(df, filename="output.json"):
         json.dump(records, f, indent=2, ensure_ascii=False, default=str)
     print(f"Data saved to {filename}")
 
-save_json(get_chats_with_messages())
+# save_json(get_ai_chat_structure(), "ai_chat_structure.json")

@@ -9,7 +9,7 @@ CONNECTION_STRING = env_vars.get("CONNECTION_STRING")
 engine = create_engine(CONNECTION_STRING)
 
 def execute_query(query):
-    """execute sqlalchemy query on neon postgresql db and return df"""
+    """Execute sqlalchemy query on neon postgresql db and return df"""
     df = pd.read_sql_query(text(query), engine)
     return df
 

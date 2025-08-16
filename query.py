@@ -8,10 +8,12 @@ CONNECTION_STRING = env_vars.get("CONNECTION_STRING")
 
 engine = create_engine(CONNECTION_STRING)
 
+
 def execute_query(query):
     """Execute sqlalchemy query on neon postgresql db and return df"""
     df = pd.read_sql_query(text(query), engine)
     return df
+
 
 def get_chat_tables():
     """Find all chat-related tables"""
@@ -23,6 +25,7 @@ def get_chat_tables():
     """
     return execute_query(query)
 
+
 def get_ai_chat_structure():
     """Get structure of ai_chat table"""
 
@@ -33,6 +36,7 @@ def get_ai_chat_structure():
     ORDER BY ordinal_position;
     """
     return execute_query(query)
+
 
 def get_chats(limit=10, include_empty_chats=True):
     """Get ai_chats that have actual messages"""
@@ -46,22 +50,25 @@ def get_chats(limit=10, include_empty_chats=True):
     """
     return execute_query(query)
 
+
 def to_dataframe(results):
     """Convert json to df"""
 
-    columns = [field['name'] for field in results['fields']]
-    df = pd.DataFrame(results['rows'], columns=columns)
+    columns = [field["name"] for field in results["fields"]]
+    df = pd.DataFrame(results["rows"], columns=columns)
     return df
+
 
 def to_json(df):
     """Convert df to json"""
 
-    records = df.to_dict('records')
+    records = df.to_dict("records")
     return json.dumps(records, indent=2, ensure_ascii=False, default=str)
+
 
 def save_json(df, filename="output.json"):
     """Save df as json file"""
-    records = df.to_dict('records') 
-    with open(filename, 'w', encoding='utf-8') as f:
+    records = df.to_dict("records")
+    with open(filename, "w", encoding="utf-8") as f:
         json.dump(records, f, indent=2, ensure_ascii=False, default=str)
     print(f"Data saved to {filename}")

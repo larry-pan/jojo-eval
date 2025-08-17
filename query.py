@@ -39,13 +39,24 @@ def get_ai_chat_structure():
 
 
 def get_chats(limit=10, include_empty_chats=True):
-    """Get ai_chats that have actual messages"""
+    """Get random sample of ai_chats that have actual messages"""
+
+    estimate_query = """
+    SELECT reltuples::bigint 
+    FROM pg_class 
+    WHERE relname = 'ai_chat';
+    """
+    result_df = execute_query(estimate_query)
+    estimated_rows = result_df.iloc[0, 0] if not result_df.empty else 1000  # fallback
+
+    # calculate percentage to get ~3x our target num of chats
+    target_sample = limit * 3
+    sample_percent = min(100, max(0.1, (target_sample / estimated_rows) * 100))
 
     query = f"""
     SELECT *
-    FROM ai_chat
+    FROM ai_chat TABLESAMPLE BERNOULLI({sample_percent})
     {"" if include_empty_chats else "WHERE messages IS NOT NULL AND jsonb_array_length(messages) > 0"}
-    ORDER BY RANDOM()
     LIMIT {limit};
     """
     return execute_query(query)

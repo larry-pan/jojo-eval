@@ -83,4 +83,3 @@ def save_json(df, filename="output.json"):
     with open(filename, "w", encoding="utf-8") as f:
         json.dump(records, f, indent=2, ensure_ascii=False, default=str)
     print(f"Data saved to {filename}")
-get_chats()

@@ -47,7 +47,7 @@ def get_chats(limit=10, include_empty_chats=True):
     WHERE relname = 'ai_chat';
     """
     result_df = execute_query(estimate_query)
-    estimated_rows = result_df.iloc[0, 0] if not result_df.empty else 1000  # fallback
+    estimated_rows = int(result_df['reltuples'].iloc[0]) if not result_df.empty else 1000  # fallback
 
     # calculate percentage to get ~3x our target num of chats
     target_sample = limit * 3
@@ -83,3 +83,4 @@ def save_json(df, filename="output.json"):
     with open(filename, "w", encoding="utf-8") as f:
         json.dump(records, f, indent=2, ensure_ascii=False, default=str)
     print(f"Data saved to {filename}")
+get_chats()
